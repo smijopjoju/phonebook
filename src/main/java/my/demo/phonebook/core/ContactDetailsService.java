@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -43,16 +44,28 @@ public class ContactDetailsService {
 
     public Contacts getContactById(final Long Id) {
 
-        return null;
+        ContactDetail contactDetail = repository.getOne(Id);
+        return dbToModel(contactDetail);
     }
 
-    public Contacts getContactByPhoneNumber(final String phoneNumber) {
-
-        return null;
+    public List<Contacts> getContactByPhoneNumber(final String phoneNumber) {
+        List<ContactDetail> contactDetails = repository.findByPersonalNumber(phoneNumber);
+        return getContactsFromContactDetails(contactDetails);
     }
 
     public List<Contacts> getContactByName(final String contactName) {
-        return Collections.emptyList();
+        List<ContactDetail> contactDetails = repository.findByContactName(contactName);
+        return getContactsFromContactDetails(contactDetails);
+    }
+
+    protected List<Contacts> getContactsFromContactDetails(List<ContactDetail> contactDetails) {
+        List<Contacts> contacts = new ArrayList<>();
+        for(ContactDetail contactDetail : contactDetails) {
+            if(contactDetail != null) {
+                contacts.add(dbToModel(contactDetail));
+            }
+        }
+        return contacts;
     }
 
     public boolean updateContactDetailsFromFile(MultipartFile uploadedFile) {
@@ -64,7 +77,7 @@ public class ContactDetailsService {
         return readFileContentAndSyncWithContacts(uploadedFile);
     }
 
-    public boolean readFileContentAndSyncWithContacts(MultipartFile file) {
+    protected boolean readFileContentAndSyncWithContacts(MultipartFile file) {
         try {
                 List<ContactDetail> uploadedContactDetails = fileService.getAllContactDetailsFromFile(file);
                 return syncContactDetails(uploadedContactDetails);
