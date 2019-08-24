@@ -5,7 +5,7 @@ import java.util.Objects;
 
 @Entity
 @Table(name="phonebook")
-public class PhoneBook {
+public class ContactDetail {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -73,13 +73,13 @@ public class PhoneBook {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        PhoneBook phoneBook = (PhoneBook) o;
-        return Objects.equals(id, phoneBook.id) &&
-                Objects.equals(contactName, phoneBook.contactName) &&
-                Objects.equals(personalNumber, phoneBook.personalNumber) &&
-                Objects.equals(officeNumber, phoneBook.officeNumber) &&
-                Objects.equals(homeNumber, phoneBook.homeNumber) &&
-                Objects.equals(emailId, phoneBook.emailId);
+        ContactDetail contactDetail = (ContactDetail) o;
+        return Objects.equals(id, contactDetail.id) &&
+                Objects.equals(contactName, contactDetail.contactName) &&
+                Objects.equals(personalNumber, contactDetail.personalNumber) &&
+                Objects.equals(officeNumber, contactDetail.officeNumber) &&
+                Objects.equals(homeNumber, contactDetail.homeNumber) &&
+                Objects.equals(emailId, contactDetail.emailId);
     }
 
     @Override
