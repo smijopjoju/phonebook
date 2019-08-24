@@ -24,6 +24,13 @@ public class PhoneBookController {
     @Autowired
     ContactDetailsService service;
 
+    @GetMapping("/")
+    @ApiOperation(value = "API to retrieve all contact details", response = List.class)
+    public ResponseEntity getAllContact() {
+        List<Contacts> contacts = service.getAllContacts();
+        return new ResponseEntity(contacts,HttpStatus.OK);
+    }
+
     @GetMapping("/{id}")
     @ApiOperation(value = "API to retrieve contact details based on ID", response = Contacts.class)
     public ResponseEntity getContact(@PathVariable("id") Long Id) {
@@ -89,7 +96,7 @@ public class PhoneBookController {
             return ResponseEntity.ok()
                     .headers(headers)
                     .contentLength(downloadableFile.length())
-                    .contentType(MediaType.parseMediaType("application/text"))
+                    .contentType(MediaType.parseMediaType("application/octet-stream"))
                     .body(resource);
         } catch (Exception e) {
             throw new DownloadableFileCreationException(e);

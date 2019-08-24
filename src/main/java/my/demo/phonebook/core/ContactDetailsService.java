@@ -48,6 +48,11 @@ public class ContactDetailsService {
         return true;
     }
 
+    public List<Contacts> getAllContacts() {
+        List<ContactDetail> contactDetails = repository.findAll();
+        return getContactsFromContactDetails(contactDetails);
+    }
+
     public Contacts getContactById(final Long Id) {
 
         Optional<ContactDetail> contactDetail = repository.findById(Id);
@@ -99,7 +104,7 @@ public class ContactDetailsService {
         for(ContactDetail contactDetail : contacts) {
             if(contactDetail != null && contactDetail.getPersonalNumber() != null) {
                 List<ContactDetail> existingContacts = repository.findByPersonalNumber(contactDetail.getPersonalNumber());
-                if(existingContacts != null && existingContacts.isEmpty()) {
+                if(existingContacts != null && !existingContacts.isEmpty()) {
                     ContactDetail updatedContact = updateRecordAndSave(contactDetail,existingContacts.get(0));
                     repository.save(updatedContact);
                 } else {
