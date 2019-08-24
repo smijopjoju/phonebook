@@ -4,14 +4,17 @@ import my.demo.phonebook.db.ContactDetail;
 import my.demo.phonebook.domain.Contacts;
 import my.demo.phonebook.exceptions.ContentReadException;
 import my.demo.phonebook.exceptions.CorreptedContactException;
+import my.demo.phonebook.exceptions.DownloadableFileCreationException;
 import my.demo.phonebook.exceptions.EmptyFileException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ContactDetailsService {
@@ -21,6 +24,9 @@ public class ContactDetailsService {
 
     @Autowired
     ContactDetailsRepo repository;
+
+    private static final String CONTENT_SPLITTER = ",";
+    private static final String NEW_LINE = "\n";
 
     public Contacts createNewContact(final Contacts newContact) {
         ContactDetail newContactDetail = modelToDB(newContact);
@@ -44,8 +50,11 @@ public class ContactDetailsService {
 
     public Contacts getContactById(final Long Id) {
 
-        ContactDetail contactDetail = repository.getOne(Id);
-        return dbToModel(contactDetail);
+        Optional<ContactDetail> contactDetail = repository.findById(Id);
+        if(contactDetail.isPresent()) {
+            return dbToModel(contactDetail.get());
+        }
+        return null;
     }
 
     public List<Contacts> getContactByPhoneNumber(final String phoneNumber) {
@@ -87,10 +96,45 @@ public class ContactDetailsService {
     }
 
     public boolean syncContactDetails(List<ContactDetail> contacts) {
-        return false;
+        for(ContactDetail contactDetail : contacts) {
+            if(contactDetail != null && contactDetail.getPersonalNumber() != null) {
+                List<ContactDetail> existingContacts = repository.findByPersonalNumber(contactDetail.getPersonalNumber());
+                if(existingContacts != null && existingContacts.isEmpty()) {
+                    ContactDetail updatedContact = updateRecordAndSave(contactDetail,existingContacts.get(0));
+                    repository.save(updatedContact);
+                } else {
+                    repository.save(contactDetail);
+                }
+            }
+
+        }
+        return true;
     }
 
-    public ContactDetail modelToDB(Contacts contact) {
+    public ContactDetail updateRecordAndSave(ContactDetail newContactDetail, ContactDetail existingContactDetail) {
+
+        existingContactDetail.setPersonalNumber(updateValue(existingContactDetail.getPersonalNumber(),newContactDetail.getPersonalNumber()));
+        existingContactDetail.setContactName(updateValue(existingContactDetail.getContactName(),newContactDetail.getContactName()));
+        existingContactDetail.setEmailId(updateValue(existingContactDetail.getEmailId(),newContactDetail.getEmailId()));
+        existingContactDetail.setHomeNumber(updateValue(existingContactDetail.getHomeNumber(),newContactDetail.getHomeNumber()));
+        existingContactDetail.setOfficeNumber(updateValue(existingContactDetail.getOfficeNumber(),newContactDetail.getOfficeNumber()));
+
+        return existingContactDetail;
+    }
+
+    private String updateValue(String existingValue, String newValue) {
+        String value = null;
+        if(existingValue == null) {
+            value = newValue;
+        } else if(newValue != null && !existingValue.equalsIgnoreCase(newValue)){
+            value = newValue;
+        } else {
+            value = existingValue;
+        }
+        return value;
+    }
+
+    protected ContactDetail modelToDB(Contacts contact) {
         if(contact != null) {
             ContactDetail contactDetail = new ContactDetail();
             contactDetail.setPersonalNumber(contact.getPersonalNumber());
@@ -98,13 +142,14 @@ public class ContactDetailsService {
             contactDetail.setHomeNumber(contact.getHomeNumber());
             contactDetail.setContactName(contact.getContactName());
             contactDetail.setEmailId(contact.getEmailId());
+            contactDetail.setId(contact.getId());
             return contactDetail;
         } else {
             throw new CorreptedContactException(" Contact detail is null "+contact);
         }
     }
 
-    public Contacts dbToModel(ContactDetail contactDetail) {
+    protected Contacts dbToModel(ContactDetail contactDetail) {
         if(contactDetail != null) {
             Contacts contacts = new Contacts();
             contacts.setContactName(contactDetail.getContactName());
@@ -112,9 +157,48 @@ public class ContactDetailsService {
             contacts.setHomeNumber(contactDetail.getHomeNumber());
             contacts.setOfficeNumber(contactDetail.getOfficeNumber());
             contacts.setPersonalNumber(contactDetail.getPersonalNumber());
+            contacts.setId(contactDetail.getId());
             return contacts;
         } else {
             throw new CorreptedContactException(" Contact details model class is null "+contactDetail);
         }
+    }
+
+    public File createDownloadableFileWithSelectedContent(List<Contacts> contacts) {
+        try {
+            StringBuilder content = getContentToTheDownloadableFile(contacts);
+            return fileService.createDownloadableFile(content);
+        } catch (Exception e) {
+            throw new DownloadableFileCreationException("Something went wrong while trying to create download file",e);
+        }
+
+    }
+
+    protected StringBuilder getContentToTheDownloadableFile(List<Contacts> contacts) {
+        StringBuilder content = new StringBuilder();
+
+        for(Contacts contact: contacts) {
+            Optional<ContactDetail> contactDetail = repository.findById(contact.getId());
+            if(contactDetail.isPresent()) {
+                content.append(convertContactDetailToFileContent(contactDetail.get()));
+            }
+        }
+
+        return content;
+    }
+
+    protected String convertContactDetailToFileContent(ContactDetail contactDetail) {
+        StringBuilder content = new StringBuilder();
+        content.append(contactDetail.getContactName())
+                .append(CONTENT_SPLITTER)
+                .append(contactDetail.getPersonalNumber())
+                .append(CONTENT_SPLITTER)
+                .append(contactDetail.getOfficeNumber())
+                .append(CONTENT_SPLITTER)
+                .append(contactDetail.getHomeNumber())
+                .append(CONTENT_SPLITTER)
+                .append(contactDetail.getEmailId())
+                .append(NEW_LINE);
+        return content.toString();
     }
 }

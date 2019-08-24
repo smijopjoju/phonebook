@@ -4,13 +4,16 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import my.demo.phonebook.core.ContactDetailsService;
 import my.demo.phonebook.domain.Contacts;
+import my.demo.phonebook.exceptions.DownloadableFileCreationException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.util.List;
 
 @RestController
@@ -25,17 +28,22 @@ public class PhoneBookController {
     @ApiOperation(value = "API to retrieve contact details based on ID", response = Contacts.class)
     public ResponseEntity getContact(@PathVariable("id") Long Id) {
         Contacts contact = service.getContactById(Id);
-        return new ResponseEntity(contact, HttpStatus.OK);
+        if(contact != null) {
+            return new ResponseEntity(contact, HttpStatus.OK);
+        } else {
+            return new ResponseEntity(HttpStatus.NO_CONTENT);
+        }
+
     }
 
-    @GetMapping("/{name}")
+    @GetMapping("/contactname/{name}")
     @ApiOperation(value = "API to retrieve contact detail based on contact name", response = List.class)
     public ResponseEntity getContactByName(@PathVariable("name") String name) {
         List<Contacts> contacts = service.getContactByName(name);
         return new ResponseEntity(contacts,HttpStatus.OK);
     }
 
-    @GetMapping("/{phonenumber}")
+    @GetMapping("/phonenumber/{phonenumber}")
     @ApiOperation(value = "API to retrieve contact details based on contact phone number",response = List.class)
     public ResponseEntity getContactByPhoneNumber(@PathVariable("phonenumber") String phoneNumber) {
         List<Contacts> contacts = service.getContactByPhoneNumber(phoneNumber);
@@ -58,7 +66,7 @@ public class PhoneBookController {
 
     @DeleteMapping("/")
     @ApiOperation(value = "API to delete the existing contact detail from the system")
-    public ResponseEntity deleteContact(Contacts contacts) {
+    public ResponseEntity deleteContact(@RequestBody Contacts contacts) {
         service.deleteContact(contacts);
         return new ResponseEntity(HttpStatus.NO_CONTENT);
     }
@@ -70,7 +78,22 @@ public class PhoneBookController {
     }
 
     @PostMapping("/download")
-    public ResponseEntity downloadContactDetails(@RequestBody List<Contacts> contacts) {
-        return null;
+    public ResponseEntity<Resource> downloadContactDetails(@RequestBody List<Contacts> contacts) {
+        try {
+            File downloadableFile = service.createDownloadableFileWithSelectedContent(contacts);
+            InputStreamResource resource = new InputStreamResource(new FileInputStream(downloadableFile));
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("Cache-Control", "no-cache, no-store, must-revalidate");
+            headers.add("Pragma", "no-cache");
+            headers.add("Expires", "0");
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .contentLength(downloadableFile.length())
+                    .contentType(MediaType.parseMediaType("application/text"))
+                    .body(resource);
+        } catch (Exception e) {
+            throw new DownloadableFileCreationException(e);
+        }
+
     }
 }

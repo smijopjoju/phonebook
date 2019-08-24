@@ -3,13 +3,11 @@ package my.demo.phonebook.core;
 import my.demo.phonebook.db.ContactDetail;
 import my.demo.phonebook.exceptions.ContentReadException;
 import org.apache.commons.io.FileUtils;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -91,5 +89,11 @@ public class FileHandlerService {
         }
 
         return contact;
+    }
+
+    public File createDownloadableFile(StringBuilder content) throws IOException {
+        File downloadableFile = new File("tempFile");
+        FileUtils.writeByteArrayToFile(downloadableFile,content.toString().getBytes());
+        return downloadableFile;
     }
 }
