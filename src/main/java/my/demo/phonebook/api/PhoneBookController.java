@@ -93,6 +93,7 @@ public class PhoneBookController {
             headers.add("Cache-Control", "no-cache, no-store, must-revalidate");
             headers.add("Pragma", "no-cache");
             headers.add("Expires", "0");
+            headers.add("Content-Disposition", "attachment; filename=contacts.csv");
             return ResponseEntity.ok()
                     .headers(headers)
                     .contentLength(downloadableFile.length())
