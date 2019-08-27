@@ -169,8 +169,9 @@ public class ContactDetailsService {
         }
     }
 
-    public File createDownloadableFileWithSelectedContent(List<Contacts> contacts) {
+    public File createDownloadableFileWithSelectedContent() {
         try {
+            List<ContactDetail> contacts = repository.findAll();
             StringBuilder content = getContentToTheDownloadableFile(contacts);
             return fileService.createDownloadableFile(content);
         } catch (Exception e) {
@@ -179,14 +180,11 @@ public class ContactDetailsService {
 
     }
 
-    protected StringBuilder getContentToTheDownloadableFile(List<Contacts> contacts) {
+    protected StringBuilder getContentToTheDownloadableFile(List<ContactDetail> contacts) {
         StringBuilder content = new StringBuilder();
 
-        for(Contacts contact: contacts) {
-            Optional<ContactDetail> contactDetail = repository.findById(contact.getId());
-            if(contactDetail.isPresent()) {
-                content.append(convertContactDetailToFileContent(contactDetail.get()));
-            }
+        for(ContactDetail contact: contacts) {
+                content.append(convertContactDetailToFileContent(contact));
         }
 
         return content;

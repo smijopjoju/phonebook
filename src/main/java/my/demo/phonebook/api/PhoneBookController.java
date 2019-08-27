@@ -84,10 +84,10 @@ public class PhoneBookController {
         return new ResponseEntity(HttpStatus.ACCEPTED);
     }
 
-    @PostMapping("/download")
-    public ResponseEntity<Resource> downloadContactDetails(@RequestBody List<Contacts> contacts) {
+    @GetMapping("/download")
+    public ResponseEntity<Resource> downloadContactDetails() {
         try {
-            File downloadableFile = service.createDownloadableFileWithSelectedContent(contacts);
+            File downloadableFile = service.createDownloadableFileWithSelectedContent();
             InputStreamResource resource = new InputStreamResource(new FileInputStream(downloadableFile));
             HttpHeaders headers = new HttpHeaders();
             headers.add("Cache-Control", "no-cache, no-store, must-revalidate");
