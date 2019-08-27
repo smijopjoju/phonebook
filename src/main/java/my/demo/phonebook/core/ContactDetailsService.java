@@ -42,8 +42,8 @@ public class ContactDetailsService {
         return updatedContact;
     }
 
-    public boolean deleteContact(final Contacts contact) {
-        ContactDetail contactDetail = modelToDB(contact);
+    public boolean deleteContact(final Long Id) {
+        ContactDetail contactDetail = repository.getOne(Id);
         repository.delete(contactDetail);
         return true;
     }

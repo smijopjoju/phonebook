@@ -24,7 +24,7 @@ public class PhoneBookController {
     @Autowired
     ContactDetailsService service;
 
-    @GetMapping("/")
+    @GetMapping("")
     @ApiOperation(value = "API to retrieve all contact details", response = List.class)
     public ResponseEntity getAllContact() {
         List<Contacts> contacts = service.getAllContacts();
@@ -57,24 +57,24 @@ public class PhoneBookController {
         return new ResponseEntity(contacts,HttpStatus.OK);
     }
 
-    @PostMapping("/")
+    @PostMapping("")
     @ApiOperation(value = "API to create new contact details to the system",response = Contacts.class)
     public ResponseEntity createNewContact(@RequestBody Contacts contacts) {
         Contacts newContact = service.createNewContact(contacts);
         return new ResponseEntity(newContact,HttpStatus.CREATED);
     }
 
-    @PutMapping("/")
+    @PutMapping("")
     @ApiOperation(value = "API to update the existing contact detail",response = Contacts.class)
     public ResponseEntity updateContact(@RequestBody Contacts contacts) {
         Contacts updatedContact = service.updateContact(contacts);
         return new ResponseEntity(updatedContact,HttpStatus.OK);
     }
 
-    @DeleteMapping("/")
+    @DeleteMapping("/{id}")
     @ApiOperation(value = "API to delete the existing contact detail from the system")
-    public ResponseEntity deleteContact(@RequestBody Contacts contacts) {
-        service.deleteContact(contacts);
+    public ResponseEntity deleteContact(@PathVariable("id") Long Id) {
+        service.deleteContact(Id);
         return new ResponseEntity(HttpStatus.NO_CONTENT);
     }
 
