@@ -97,7 +97,7 @@ public class PhoneBookController {
             return ResponseEntity.ok()
                     .headers(headers)
                     .contentLength(downloadableFile.length())
-                    .contentType(MediaType.parseMediaType("application/octet-stream"))
+                    .contentType(MediaType.parseMediaType("text/csv; charset=utf-8"))
                     .body(resource);
         } catch (Exception e) {
             throw new DownloadableFileCreationException(e);
